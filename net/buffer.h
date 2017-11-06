@@ -15,7 +15,8 @@ struct bytes_chunk {
     struct list_head list;
 };
 
-struct bytes_buffer {
+struct bytes_buffer { /* length_total == length mean read finish */
+    int length_total;
     int length;
     struct bytes_chunk chunk_list;
 };

@@ -8,6 +8,7 @@
 
 struct bytes_buffer *create_bytes_buffer() {
     struct bytes_buffer *buffer = (struct bytes_buffer *) malloc(sizeof(struct bytes_buffer));
+    buffer ->length_total = -1;
     buffer->length = 0;
 
     INIT_LIST_HEAD(&buffer->chunk_list.list);
