@@ -46,9 +46,9 @@ static int parse_frame_length(length_field_based_frame_desc *frame_desc,
  * @return
  */
 int parse_frame(length_field_based_frame_desc *frame_desc,
-                       struct bytes_buffer *buffer,
-                       char *data,
-                       int buf_size) {
+                struct bytes_buffer *buffer,
+                char *data,
+                int buf_size) {
     int append_total_size;
 
     append_to_bytes_buffer(data, 0, buf_size, buffer);
@@ -61,7 +61,8 @@ int parse_frame(length_field_based_frame_desc *frame_desc,
         }
     }
 
-    append_total_size = buffer->length_body + frame_desc->length_field_offset + frame_desc->length_field_length + frame_desc->length_adjustment;
+    append_total_size = buffer->length_body + frame_desc->length_field_offset + frame_desc->length_field_length +
+                        frame_desc->length_adjustment;
     if (buffer->length >= append_total_size) {
         return buffer->length - append_total_size;
     }

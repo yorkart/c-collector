@@ -26,7 +26,8 @@ typedef struct {
 } net_package;
 
 int parse_frame(length_field_based_frame_desc *frame_desc,
-                       struct bytes_buffer *buffer,
-                       char *data,
-                       int buf_size);
+                struct bytes_buffer *buffer,
+                char *data,
+                int buf_size);
+
 #endif //SHOWCASE_UTILS_H

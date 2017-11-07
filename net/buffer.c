@@ -61,7 +61,7 @@ void print_buffer(struct bytes_buffer *buffer) {
     }
 }
 
- void free_buffer(struct bytes_buffer *buffer) {
+void free_buffer(struct bytes_buffer *buffer) {
     struct list_head *pos, *q;
     struct bytes_chunk *tmp;
 
