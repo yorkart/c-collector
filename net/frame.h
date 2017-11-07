@@ -6,45 +6,14 @@
 #define SHOWCASE_UTILS_H
 
 #include <stdlib.h>
+#include <mem.h>
 #include "buffer.h"
 #include "../utils/list.h"
-
-static int bytes_2_int(const char* buf);
-
-static int bytes_int_1(const char* buf);
-static int bytes_int_2(const char* buf);
-static int bytes_int_3(const char* buf);
-static int bytes_int_4(const char* buf);
-
-typedef struct {
-    int length;
-    int (*bytes_int_fn)(const char*);
-} int_parser;
-
-static int_parser* build_int_parser(int length) {
-    if (length > 4 || length < 1) {
-        return (void *)0;
-    }
-
-    int_parser* parser = (int_parser*)malloc(sizeof(int_parser));
-    parser->length = length;
-    if (length == 1) {
-        parser->bytes_int_fn = &bytes_int_1;
-    } else if (length == 2) {
-        parser->bytes_int_fn = &bytes_int_2;
-    } else if (length == 3) {
-        parser->bytes_int_fn = &bytes_int_3;
-    } else if (length == 4) {
-        parser->bytes_int_fn = &bytes_int_4;
-    }
-
-    return parser;
-}
 
 typedef struct {
     int max_frame_length;
     int length_field_offset;
-    int_parser* length_field_length;
+    int length_field_length;
     int length_adjustment; /* relative to length offset, body offset position*/
     int initial_bytes_to_strip;
 } length_field_based_frame_desc;
@@ -56,4 +25,8 @@ typedef struct {
     char *data;
 } net_package;
 
+int parse_frame(length_field_based_frame_desc *frame_desc,
+                       struct bytes_buffer *buffer,
+                       char *data,
+                       int buf_size);
 #endif //SHOWCASE_UTILS_H

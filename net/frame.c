@@ -2,37 +2,36 @@
 // Created by wangyue1 on 2017/11/2.
 //
 
-#include <mem.h>
 #include "frame.h"
 
-static int bytes_2_int(const char *buf) {
-    int addr = buf[0] & 0xFF;
-    addr |= ((buf[1] << 8) & 0xFF00);
-    addr |= ((buf[2] << 16) & 0xFF0000);
-    addr |= ((buf[3] << 24) & 0xFF000000);
-    return addr;
+static char *parse_frame_length_bytes(length_field_based_frame_desc *frame_desc,
+                                      struct bytes_buffer *buffer) {
+
 }
 
-static int bytes_int_1(const char* buf) {
-    return buf[0];
-}
-static int bytes_int_2(const char* buf) {
-    int addr = buf[0] & 0xFF;
-    addr |= ((buf[1] << 8) & 0xFF00);
-    return addr;
-}
-static int bytes_int_3(const char* buf) {
-    int addr = buf[0] & 0xFF;
-    addr |= ((buf[1] << 8) & 0xFF00);
-    addr |= ((buf[2] << 16) & 0xFF0000);
-    return addr;
-}
-static int bytes_int_4(const char* buf) {
-    int addr = buf[0] & 0xFF;
-    addr |= ((buf[1] << 8) & 0xFF00);
-    addr |= ((buf[2] << 16) & 0xFF0000);
-    addr |= ((buf[3] << 24) & 0xFF000000);
-    return addr;
+static int parse_frame_length(length_field_based_frame_desc *frame_desc,
+                              struct bytes_buffer *buffer) {
+    // left boundary
+    int length_field_offset = frame_desc->length_field_offset;
+    // right boundary
+    int length_field_boundary = frame_desc->length_field_offset +
+                                frame_desc->length_field_length;
+    int length_value;
+
+    // check header of the buffer is already
+    if (length_field_boundary > buffer->length) {
+        return 1;
+    }
+
+    // check body length is beyond the threshold
+    read_buffer_int(length_field_offset, frame_desc->length_field_length, &length_value, buffer);
+
+    if (length_value > frame_desc->max_frame_length) {
+        return -1;
+    }
+
+    buffer->length_body = length_value;
+    return 0;
 }
 
 /**
@@ -46,39 +45,28 @@ static int bytes_int_4(const char* buf) {
  * @param package
  * @return
  */
-static int parse_frame(length_field_based_frame_desc *frame_desc,
-                       struct bytes_buffer* buffer,
+int parse_frame(length_field_based_frame_desc *frame_desc,
+                       struct bytes_buffer *buffer,
                        char *data,
                        int buf_size) {
-    // left boundary
-    int length_field_offset = frame_desc->length_field_offset;
-    // right boundary
-    int length_field_boundary = frame_desc->length_field_offset +
-                                frame_desc->length_field_length->length;
-    int data_field_offset;
+    int append_total_size;
 
-    // check header of the buffer is already
-    if (length_field_boundary > buf_size) {
-        append_to_bytes_buffer(data, 0, buf_size, buffer);
-        return -1;
+    append_to_bytes_buffer(data, 0, buf_size, buffer);
+
+    if (buffer->length_body < 0) {
+        parse_frame_length(frame_desc, buffer);
+
+        if (buffer->length_body < 0) {
+            return -1;
+        }
     }
 
-    // check body length is beyond the threshold
-    int length = frame_desc->length_field_length->bytes_int_fn(data + length_field_offset);
-    if (length > frame_desc->max_frame_length) {
-        return -2;
+    append_total_size = buffer->length_body + frame_desc->length_field_offset + frame_desc->length_field_length + frame_desc->length_adjustment;
+    if (buffer->length >= append_total_size) {
+        return buffer->length - append_total_size;
     }
 
-    buffer->length_total = length;
-
-    data_field_offset = length_field_boundary + frame_desc->length_adjustment;
-    if (buf_size >= data_field_offset) {
-        append_to_bytes_buffer(data, data_field_offset, length, buffer);
-    } else { // all remaining
-        append_to_bytes_buffer(data, data_field_offset, buf_size - data_field_offset, buffer);
-    }
-
-    return 0;
+    return -1;
 }
 
 static int parse_package0(length_field_based_frame_desc *frame_desc,
