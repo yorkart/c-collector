@@ -26,8 +26,6 @@ struct bytes_buffer *create_bytes_buffer();
 
 void append_to_bytes_buffer(char *data, int offset, int length, struct bytes_buffer *buffer);
 
-static void set_buffer_position(int position, struct bytes_buffer *buffer);
-
 char *buffer_to_bytes(struct bytes_buffer *buffer);
 
 void print_buffer(struct bytes_buffer *buffer);
