@@ -4,8 +4,8 @@
 
 #include "sock.h"
 
-static int libuv_serv() {
-    loop = uv_default_loop();
+int libuv_serve() {
+    uv_loop_t *loop = uv_default_loop();
 
     struct sockaddr_in bind_addr;
     int rt = uv_ip4_addr("10.101.22.31", 8998, &bind_addr);
@@ -41,12 +41,14 @@ static void echo_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf
     buf->len = suggested_size;
 }
 
-static void on_close(uv_handle_t *peer) {
+void on_close(uv_handle_t *peer) {
+    printf("close");
     free(peer);
 }
 
-static void on_connection(uv_stream_t *server, int status) {
+void on_connection(uv_stream_t *server, int status) {
     uv_stream_t *stream;
+    uv_loop_t *loop = server->loop;
     int r;
 
     if (status) {
@@ -78,12 +80,12 @@ static void on_connection(uv_stream_t *server, int status) {
     printf("connection success\n");
 }
 
-static void after_shutdown(uv_shutdown_t *req, int status) {
+void after_shutdown(uv_shutdown_t *req, int status) {
     uv_close((uv_handle_t *) req->handle, on_close);
     free(req);
 }
 
-static void after_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
+void after_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
     int i;
 //    write_req_t *wr;
     uv_shutdown_t *sreq;
@@ -109,8 +111,8 @@ static void after_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) 
     }
 
     printf("read data:%d->", (int)nread);
-    for (i =0; i< nread; i++) {
-        printf(", %c\n", buf->base[i]);
-    }
+//    for (i =0; i< nread; i++) {
+//        printf("%c", buf->base[i]);
+//    }
     printf("\n");
 }

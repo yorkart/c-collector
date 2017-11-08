@@ -16,17 +16,14 @@ typedef struct {
     uv_buf_t buf;
 } write_req_t;
 
-static uv_loop_t *loop;
+int libuv_serve();
 
-static void after_read(uv_stream_t *, ssize_t nread, const uv_buf_t *buf);
+void on_connection(uv_stream_t *server, int status);
 
-static void on_close(uv_handle_t *peer);
+void after_read(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf);
 
-static void on_connection(uv_stream_t *, int status);
+void parse_package(char* data);
 
-static void parse_package(char* data);
-
-static int libuv_serv();
 
 
 #endif //SHOWCASE_SOCK_H

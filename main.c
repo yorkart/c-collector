@@ -3,6 +3,7 @@
 #include "utils/bytes.h"
 #include "net/buffer.h"
 #include "net/frame.h"
+#include "net/sock.h"
 
 static void buffer_test() {
     int i, n;
@@ -96,6 +97,8 @@ int main() {
 //    printf("buffer: %d,%d,%d,%d\n", (int)buffer[0], (int)buffer[1], (int)buffer[2], (int)buffer[3]);
 
 //    n = bytes_2_int(buffer);
+
+    libuv_serve();
 
     test_length_parser();
 
