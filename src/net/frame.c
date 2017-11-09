@@ -2,6 +2,7 @@
 // Created by wangyue1 on 2017/11/2.
 //
 
+#include <stdio.h>
 #include "frame.h"
 
 static char *parse_frame_length_bytes(length_field_based_frame_desc *frame_desc,
@@ -51,6 +52,12 @@ int parse_frame(length_field_based_frame_desc *frame_desc,
                 int buf_size) {
     int append_total_size;
 
+    int i;
+    for(i=0; i< 9; i++) {
+        printf("%d ", data[i]);
+    }
+    printf("\n");
+
     append_to_bytes_buffer(data, 0, buf_size, buffer);
 
     if (buffer->length_body < 0) {
@@ -61,7 +68,9 @@ int parse_frame(length_field_based_frame_desc *frame_desc,
         }
     }
 
-    append_total_size = buffer->length_body + frame_desc->length_field_offset + frame_desc->length_field_length +
+    append_total_size = buffer->length_body +
+                        frame_desc->length_field_offset +
+                        frame_desc->length_field_length +
                         frame_desc->length_adjustment;
     if (buffer->length >= append_total_size) {
         return buffer->length - append_total_size;
