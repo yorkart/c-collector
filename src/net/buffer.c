@@ -158,7 +158,7 @@ char *read_buffer_bytes(int offset, int length, struct bytes_buffer *buffer) {
         tmp = list_entry(pos, struct bytes_chunk, list);
 
         printf("chunk index: %d\n", tmp->id);
-        print_bytes(tmp->data + (tmp->id == 0? 9 : 0), tmp->length - (tmp->id == 0? 9 : 0));
+//        print_bytes(tmp->data + (tmp->id == 0? 9 : 0), tmp->length - (tmp->id == 0? 9 : 0));
 
         max_length = tmp->length + finish_chunk_length;
         finish_chunk_length = max_length;

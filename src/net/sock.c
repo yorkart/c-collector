@@ -48,6 +48,7 @@ void on_close(uv_handle_t *peer) {
     net_handler_context* handler_context = (net_handler_context*)peer->data;
 
     (*server_context->free_buffer)(handler_context->buffer);
+    free(handler_context);
 
     printf("close");
     free(peer);
@@ -110,11 +111,12 @@ void after_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
     if (nread < 0) {
         if (nread != UV_EOF) {
-            printf("reading...\n");
-            return;
+            printf("read error\n");
+//            return;
         }
 
         free(buf->base);
+
         sreq = (uv_shutdown_t *) malloc(sizeof *sreq);
         if (uv_shutdown(sreq, stream, after_shutdown)) {
             printf("shutdown error\n");
@@ -135,12 +137,13 @@ void after_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         handler_context->buffer = (*server_context->create_buffer)(server_context->create_parameter);
     }
 
-    (*server_context->append_data)(buf->base, (int)nread, handler_context->buffer);
     printf("read data:%d->", (int)nread);
     for (i =0; i< 50; i++) {
         printf("%c", buf->base[i]);
     }
     printf("\n");
+
+    (*server_context->append_data)(buf->base, (int)nread, handler_context->buffer);
 
     // todo would to remove. performance!!!
     free(buf->base);

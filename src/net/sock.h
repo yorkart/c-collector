@@ -10,6 +10,7 @@
 //} SRWLOCK, *PSRWLOCK;
 
 #include <uv.h>
+#include "../utils/tools.h"
 
 typedef struct {
     uv_write_t req;
