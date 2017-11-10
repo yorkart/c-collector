@@ -5,8 +5,8 @@
 #ifndef C_COLLECTOR_TOOLS_H
 #define C_COLLECTOR_TOOLS_H
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static void print_bytes(char *bytes, int length) {
     char *c = (char *) malloc(sizeof(char) * (length + 1));

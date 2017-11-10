@@ -5,6 +5,9 @@
 #ifndef C_COLLECTOR_SOCKET_TEST_H
 #define C_COLLECTOR_SOCKET_TEST_H
 
+#include <pthread.h>
+#include <unistd.h>
+
 #include "../../src/net/sock.h"
 #include "../../src/net/frame.h"
 #include "../../src/net/sock_frame.h"
@@ -54,22 +57,66 @@
 //    }
 //}
 
-int libuv_serve_test() {
+void call_back(struct lfq_ctx* queue, length_field_based_frame_desc *frame_desc, struct bytes_buffer* buffer) {
+    int offset = frame_desc->length_field_offset + frame_desc->length_field_length + frame_desc->length_adjustment;
+    char *body = read_buffer_bytes(offset, buffer->length - offset, buffer);
+    printf("body length: %d\n", buffer->length_body);
+//    printf("length: %s\n", body);
+    print_bytes(body, buffer->length - offset);
+
+    free(body);
+}
+
+void *serve(void *arg) {
+    struct lfq_ctx *queue = (struct lfq_ctx *) arg;
     length_field_based_frame_desc *frame_desc = malloc(sizeof(length_field_based_frame_desc));
-    net_server_context *server_context = malloc(sizeof(net_server_context));
+    sock_frame_arg *frame_arg = (sock_frame_arg *) malloc(sizeof(sock_frame_arg));
+    net_server_context *server_context;
 
     frame_desc->length_field_offset = 5;
     frame_desc->length_field_length = 4;
     frame_desc->length_adjustment = 0;
     frame_desc->max_frame_length = 1024 * 1024;
 
-    server_context->create_parameter = (void*)frame_desc;
-    server_context->create_buffer = frame_create_buffer;
-    server_context->append_data = frame_append_data;
-    server_context->free_buffer = frame_free_buffer;
+    frame_arg->frame_desc = frame_desc;
+    frame_arg->queue = queue;
+    frame_arg->call_back = call_back;
 
+    server_context = create_frame_server_context(frame_arg);
 
-    return libuv_serve(server_context);
+    printf("server start......");
+    libuv_serve(server_context);
+
+    return 0;
+}
+
+void* consume(void* arg) {
+    struct lfq_ctx *queue = (struct lfq_ctx *) arg;
+    void* ret ;
+    for(;;) {
+        ret = lfq_dequeue(queue);
+        if(ret == 0) {
+            sleep(1000);
+        } else {
+            sleep(100);
+        }
+    }
+
+    return 0;
+}
+
+int libuv_serve_test() {
+    pthread_t _thread1;
+    pthread_t _thread2;
+
+    struct lfq_ctx *queue = (struct lfq_ctx *) malloc(sizeof(struct lfq_ctx));
+    lfq_init(queue, 1);
+
+    pthread_create(&_thread1, NULL, serve, queue);
+    pthread_create(&_thread2, NULL, consume, queue);
+
+    pthread_join(_thread1, NULL);
+    pthread_join(_thread2, NULL);
 }
 
 #endif //C_COLLECTOR_SOCKET_TEST_H
