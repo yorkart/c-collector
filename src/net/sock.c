@@ -41,6 +41,8 @@ int libuv_serve(net_server_context* server_context) {
 static void echo_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     buf->base = (char *) malloc(suggested_size);
     buf->len = suggested_size;
+
+    printf("malloc size: %d\n", suggested_size);
 }
 
 void on_close(uv_handle_t *peer) {

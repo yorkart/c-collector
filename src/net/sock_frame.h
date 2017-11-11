@@ -10,19 +10,19 @@
 #include "sock.h"
 #include "../utils/lfqueue.h"
 
-typedef struct {
+struct sock_frame_arg {
     length_field_based_frame_desc *frame_desc;
     struct lfq_ctx *queue;
-    void (*call_back)(struct lfq_ctx* queue, length_field_based_frame_desc *frame_desc, struct bytes_buffer* buffer);
-} sock_frame_arg;
+    void (*call_back)(struct sock_frame_arg *frame_arg, struct bytes_buffer* buffer);
+};
 
 typedef struct {
     struct bytes_buffer *buffer;
 //    length_field_based_frame_desc *frame_desc;
-    sock_frame_arg *frame_arg;
+    struct sock_frame_arg *frame_arg;
 } sock_frame_buffer;
 
-net_server_context *create_frame_server_context(sock_frame_arg* frame_arg);
+net_server_context *create_frame_server_context(struct sock_frame_arg* frame_arg);
 
 void *frame_create_buffer(void *create_parameter);
 

@@ -139,44 +139,44 @@ int read_buffer_int(int offset, int length, int *out_value, struct bytes_buffer 
     return 0;
 }
 
-char *read_buffer_bytes(int offset, int length, struct bytes_buffer *buffer) {
-    struct list_head *pos;
-    struct bytes_chunk *tmp;
-
-    int right_boundary = offset + length;
-
-    int finish_chunk_length = 0;
-    int current_offset = offset;
-
-    int read_chunk_length;
-    int max_length;
-
-    char *bytes = (char *) malloc(sizeof(char) * length);
-    int bytes_index = 0;
-
-    list_for_each_prev(pos, &(buffer->chunk_list.list)) {
-        tmp = list_entry(pos, struct bytes_chunk, list);
-
-        printf("chunk index: %d\n", tmp->id);
-//        print_bytes(tmp->data + (tmp->id == 0? 9 : 0), tmp->length - (tmp->id == 0? 9 : 0));
-
-        max_length = tmp->length + finish_chunk_length;
-        finish_chunk_length = max_length;
-
-        if (max_length < offset) {
-            continue;
-        }
-
-        read_chunk_length = max_length - current_offset;
-        memcpy(bytes + bytes_index, tmp->data + (tmp->length - read_chunk_length), (size_t) read_chunk_length);
-
-        if (max_length > right_boundary) {
-            break;
-        }
-
-        current_offset += read_chunk_length;
-        bytes_index += read_chunk_length;
-    }
-
-    return bytes;
-}
+//char *read_buffer_bytes(int offset, int length, struct bytes_buffer *buffer) {
+//    struct list_head *pos;
+//    struct bytes_chunk *tmp;
+//
+//    int right_boundary = offset + length;
+//
+//    int finish_chunk_length = 0;
+//    int current_offset = offset;
+//
+//    int read_chunk_length;
+//    int max_length;
+//
+//    char *bytes = (char *) malloc(sizeof(char) * length);
+//    int bytes_index = 0;
+//
+//    list_for_each_prev(pos, &(buffer->chunk_list.list)) {
+//        tmp = list_entry(pos, struct bytes_chunk, list);
+//
+//        printf("chunk index: %d\n", tmp->id);
+////        print_bytes(tmp->data + (tmp->id == 0? 9 : 0), tmp->length - (tmp->id == 0? 9 : 0));
+//
+//        max_length = tmp->length + finish_chunk_length;
+//        finish_chunk_length = max_length;
+//
+//        if (max_length < offset) {
+//            continue;
+//        }
+//
+//        read_chunk_length = max_length - current_offset;
+//        memcpy(bytes + bytes_index, tmp->data + (tmp->length - read_chunk_length), (size_t) read_chunk_length);
+//
+//        if (max_length > right_boundary) {
+//            break;
+//        }
+//
+//        current_offset += read_chunk_length;
+//        bytes_index += read_chunk_length;
+//    }
+//
+//    return bytes;
+//}

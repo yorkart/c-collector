@@ -19,8 +19,8 @@ struct bytes_chunk {
 };
 
 struct bytes_buffer { /* length_total == length mean read finish */
-    int length_body;
-    int length;
+    int length_body; // body's block length
+    int length; // all buffer length
     int chunks;
     struct bytes_chunk chunk_list;
 };
@@ -39,6 +39,6 @@ void free_buffer(struct bytes_buffer *buffer);
 
 int read_buffer_int(int offset, int length, int *out_value, struct bytes_buffer *buffer);
 
-char *read_buffer_bytes(int offset, int length, struct bytes_buffer *buffer);
+//char *read_buffer_bytes(int offset, int length, struct bytes_buffer *buffer);
 
 #endif //SHOWCASE_BUFFER_H

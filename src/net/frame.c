@@ -5,9 +5,23 @@
 #include <stdio.h>
 #include "frame.h"
 
-static char *parse_frame_length_bytes(length_field_based_frame_desc *frame_desc,
-                                      struct bytes_buffer *buffer) {
+length_field_based_frame_desc *create_length_field_based_frame_desc(
+        int max_frame_length,
+        int length_field_offset,
+        int length_field_length,
+        int length_adjustment,
+        int initial_bytes_to_strip) {
+    length_field_based_frame_desc *frame_desc = malloc(sizeof(length_field_based_frame_desc));
+    frame_desc->max_frame_length = max_frame_length;
+    frame_desc->length_field_offset = length_field_offset;
+    frame_desc->length_field_length = length_field_length;
+    frame_desc->length_adjustment = length_adjustment;
+    frame_desc->initial_bytes_to_strip = initial_bytes_to_strip;
 
+    frame_desc->header_length = frame_desc->length_field_offset +
+                                frame_desc->length_field_length +
+                                frame_desc->length_adjustment;
+    return frame_desc;
 }
 
 static int parse_frame_length(length_field_based_frame_desc *frame_desc,
@@ -68,48 +82,10 @@ int parse_frame(length_field_based_frame_desc *frame_desc,
         }
     }
 
-    append_total_size = buffer->length_body +
-                        frame_desc->length_field_offset +
-                        frame_desc->length_field_length +
-                        frame_desc->length_adjustment;
+    append_total_size = buffer->length_body + frame_desc->header_length;
     if (buffer->length >= append_total_size) {
         return buffer->length - append_total_size;
     }
 
     return -1;
-}
-
-static int parse_package0(length_field_based_frame_desc *frame_desc,
-                          const char *buf,
-                          const int offset,
-                          const int buf_size,
-                          net_package *package) {
-    if (offset + 4 >= buf_size) {/* 4 */
-        return -1;
-    }
-    int message_id = bytes_2_int(buf + offset);
-
-    if (offset + 5 >= buf_size) {/* 4+1 */
-        return -1;
-    }
-    char type = buf[offset + 4];
-
-    if (offset + 9 >= buf_size) { /* 4+1+4 */
-        return -1;
-    }
-    int length = bytes_2_int(buf + offset + 5);
-
-    if (offset + 9 + length >= buf_size) { /* 4+1+4 */
-        return -1;
-    }
-
-    char data[length];
-    memcpy(data, buf + offset + 9, (size_t) length);
-
-    package->message_id = message_id;
-    package->type = type;
-    package->length = length;
-    package->data = data;
-
-    return 0;
 }

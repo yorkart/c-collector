@@ -8,75 +8,31 @@
 #include <pthread.h>
 #include <unistd.h>
 
+
+#include "../../src/zlog/zlog.h"
 #include "../../src/net/sock.h"
 #include "../../src/net/frame.h"
 #include "../../src/net/sock_frame.h"
 #include "../../src/utils/tools.h"
 
-//length_field_based_frame_desc *frame_desc;
-//
-//void frame_free_buffer(void *buffer);
-//
-//void *frame_create_buffer();
-//
-//void frame_append_data(void *data, int size, void *buffer);
-//
-//void frame_free_buffer(void *buffer) {
-//    free_buffer((struct bytes_buffer *) buffer);
-//}
-//
-//void *frame_create_buffer() {
-//    return (void *) create_bytes_buffer();
-//}
-//
-//void frame_append_data(void *data, int size, void *buffer) {
-//    struct bytes_buffer *buf = (struct bytes_buffer *) buffer;
-//    char *unread_buffer;
-//
+void call_back(struct sock_frame_arg *frame_arg, struct bytes_buffer *buffer) {
+    struct lfq_ctx *queue = frame_arg->queue;
+
+    lfq_enqueue(queue, buffer);
+
 //    int offset = frame_desc->length_field_offset + frame_desc->length_field_length + frame_desc->length_adjustment;
-//    char *body;
+//    char *body = read_buffer_bytes(offset, buffer->length - offset, buffer);
+//    printf("body length: %d\n", buffer->length_body);
+//    print_bytes(body, buffer->length - offset);
 //
-//    int rt = parse_frame(frame_desc, buffer, data, size);
-//    printf("parse frame return value: %d, buffer:\n", rt);
-//    if (rt < 0) {
-//        return;
-//    }
-//
-//    body = read_buffer_bytes(offset, buf->length - offset, buf);
-//    printf("length: %d\n", buf->length_body);
-////    printf("length: %s\n", body);
-//    print_bytes(body, buf->length - offset);
-//
-//    clear_buffer(buffer);
-//
-//    if (rt > 0) {
-//        unread_buffer = (char *) malloc(sizeof(char) * rt);
-//        memcpy(unread_buffer, data + (size - rt), (size_t)rt);
-//
-//        frame_append_data(unread_buffer, rt, buffer);
-//    }
-//}
-
-void call_back(struct lfq_ctx* queue, length_field_based_frame_desc *frame_desc, struct bytes_buffer* buffer) {
-    int offset = frame_desc->length_field_offset + frame_desc->length_field_length + frame_desc->length_adjustment;
-    char *body = read_buffer_bytes(offset, buffer->length - offset, buffer);
-    printf("body length: %d\n", buffer->length_body);
-//    printf("length: %s\n", body);
-    print_bytes(body, buffer->length - offset);
-
-    free(body);
+//    free(body);
 }
 
 void *serve(void *arg) {
     struct lfq_ctx *queue = (struct lfq_ctx *) arg;
-    length_field_based_frame_desc *frame_desc = malloc(sizeof(length_field_based_frame_desc));
-    sock_frame_arg *frame_arg = (sock_frame_arg *) malloc(sizeof(sock_frame_arg));
+    struct sock_frame_arg *frame_arg = (struct sock_frame_arg *) malloc(sizeof(struct sock_frame_arg));
     net_server_context *server_context;
-
-    frame_desc->length_field_offset = 5;
-    frame_desc->length_field_length = 4;
-    frame_desc->length_adjustment = 0;
-    frame_desc->max_frame_length = 1024 * 1024;
+    length_field_based_frame_desc *frame_desc = create_length_field_based_frame_desc(1024 * 1024, 5, 4, 0, 0);
 
     frame_arg->frame_desc = frame_desc;
     frame_arg->queue = queue;
@@ -84,22 +40,44 @@ void *serve(void *arg) {
 
     server_context = create_frame_server_context(frame_arg);
 
-    printf("server start......");
+    printf("server start......\n");
     libuv_serve(server_context);
 
     return 0;
 }
 
-void* consume(void* arg) {
+void *consume(void *arg) {
     struct lfq_ctx *queue = (struct lfq_ctx *) arg;
-    void* ret ;
-    for(;;) {
+    void *ret;
+    int offset = 9;
+    int running = 1;
+    sleep(10);
+    while (running) {
         ret = lfq_dequeue(queue);
-        if(ret == 0) {
-            sleep(1000);
-        } else {
-            sleep(100);
+        if (ret == 0) {
+            printf("queue empty\n");
+            sleep(3);
+            continue;
         }
+
+        struct bytes_buffer *buffer = (struct bytes_buffer *) ret;
+
+        sleep(1);
+
+        if (buffer->length_body > buffer->length - offset) {
+            printf("error");
+        }
+
+//        char *body = read_buffer_bytes(offset, buffer->length_body, buffer);
+        char *data = buffer_to_bytes(buffer);
+
+//        printf("body length: %d\n", buffer->length_body);
+        zlogf_time(ZLOG_LOC, "body length: %d\n", buffer->length_body);
+
+        print_bytes(data + 9 + (buffer->length_body - 20), 20);
+
+        free(data);
+        free_buffer(buffer);
     }
 
     return 0;

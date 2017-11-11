@@ -4,7 +4,7 @@
 
 #include "sock_frame.h"
 
-net_server_context *create_frame_server_context(sock_frame_arg* frame_arg){
+net_server_context *create_frame_server_context(struct sock_frame_arg* frame_arg){
     net_server_context *server_context = malloc(sizeof(net_server_context));
     server_context->create_parameter = (void*)frame_arg;
     server_context->create_buffer = frame_create_buffer;
@@ -15,7 +15,7 @@ net_server_context *create_frame_server_context(sock_frame_arg* frame_arg){
 }
 
 void *frame_create_buffer(void* create_parameter) {
-    sock_frame_arg* frame_arg = (sock_frame_arg* )create_parameter;
+    struct sock_frame_arg* frame_arg = (struct sock_frame_arg* )create_parameter;
     sock_frame_buffer* frame_buffer = (sock_frame_buffer*)malloc(sizeof(sock_frame_buffer));
 
     frame_buffer->buffer = create_bytes_buffer();
@@ -35,19 +35,18 @@ void frame_append_data(void *data, int size, void *arg) {
     sock_frame_buffer* frame_buffer = (sock_frame_buffer*)arg;
     struct bytes_buffer *buffer = frame_buffer->buffer;
     length_field_based_frame_desc *frame_desc = frame_buffer->frame_arg->frame_desc;
-    struct lfq_ctx *queue = frame_buffer->frame_arg->queue;
 
     char *unread_buffer;
 
     int rt = parse_frame(frame_desc, buffer, (char*)data, size);
-    printf("parse frame return value: %d, buffer:\n", rt);
     if (rt < 0) {
+        printf("parse frame return value: %d, buffer:\n", rt);
         return;
     }
 
-    frame_buffer->frame_arg->call_back(queue, frame_desc, buffer);
+    frame_buffer->frame_arg->call_back(frame_buffer->frame_arg, buffer);
 
-    free_buffer(buffer);
+//    free_buffer(buffer);
     frame_buffer->buffer = create_bytes_buffer();
 
     printf("clear buffer\n");
